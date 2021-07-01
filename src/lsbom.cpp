@@ -55,8 +55,10 @@ enum {
 
 
 static int debug = 0;
-static char *data;
 static BOMBlockTable *indexHeader;
+namespace bomutil {
+    static char *data;
+}
 
 char *lookup(int i, uint32_t *length = 0) {
   BOMPointer *index = indexHeader->blockPointers + ntohl(i);
@@ -67,7 +69,7 @@ char *lookup(int i, uint32_t *length = 0) {
         << " addr=0x" << hex << setw(4) << setfill('0') << addr
         << " len=" << dec << ntohl(index->length));
 
-  return data + addr;
+  return bomutil::data + addr;
 }
 
 
@@ -234,10 +236,10 @@ int main(int argc, char *argv[]) {
     }
 
     // Allocate space
-    data = new char[length];
+      bomutil::data = new char[length];
 
     // Read data
-    f.read(data, length);
+    f.read(bomutil::data, length);
 
     if (f.fail()) {
       cerr << "Failed to read BOM file" << endl;
@@ -246,17 +248,17 @@ int main(int argc, char *argv[]) {
 
     f.close();
 
-    BOMHeader *header = (BOMHeader *)data;
+    BOMHeader *header = (BOMHeader *)bomutil::data;
 
     if (string(header->magic, 8) != "BOMStore") {
       cerr << "Not a BOM file: " << argv[i] << endl;
       return 1;
     }
 
-    indexHeader = (BOMBlockTable *)(data + ntohl(header->indexOffset));
+    indexHeader = (BOMBlockTable *)(bomutil::data + ntohl(header->indexOffset));
 
     // Process vars
-    BOMVars *vars = (BOMVars *)(data + ntohl(header->varsOffset));
+    BOMVars *vars = (BOMVars *)(bomutil::data + ntohl(header->varsOffset));
     char *ptr = (char *)vars->first;
     for (unsigned i = 0; i < ntohl(vars->count); i++) {
       BOMVar *var = (BOMVar *)ptr;
